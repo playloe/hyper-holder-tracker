@@ -20,8 +20,8 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        # ADICIONAMOS O CLOUDSCRAPER AQUI:
-        run: pip install requests cloudscraper
+        # NOVA BIBLIOTECA ANTI-CLOUDFLARE AQUI:
+        run: pip install curl_cffi
 
       - name: Run collector
         run: python update_holders.py
