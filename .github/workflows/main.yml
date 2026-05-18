@@ -8,13 +8,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Força a permissão de escrita diretamente no nível do Job
     permissions:
-      contents: write # Permissão crucial para salvar o arquivo
+      contents: write
+    
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # Garante que ele pegue todo o histórico para poder fazer o push
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,8 +31,8 @@ jobs:
 
       - name: Commit and push if changed
         run: |
-          git config --global user.name 'GitHub Action Bot'
-          git config --global user.email 'action@github.com'
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add holders.json
-          git commit -m "Update holders data" || exit 0
-          git push
+          git commit -m "Update holders data" || echo "Sem mudanças para salvar"
+          git push origin main
