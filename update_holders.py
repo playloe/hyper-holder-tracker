@@ -3,28 +3,28 @@ import json
 import sys
 
 def get_holders():
+    # Sua chave do ScraperAPI
     SCRAPER_KEY = "49b6f019e504a5ec3271bd87b55da0bd"
     url_alvo = "https://hyperevmscan.io/api/v2/tokens/0x9df5c1ad28fb08b47c07bd8e48f37b33fdebcd05/holders"
     
-    # MODO MÁXIMO ATIVADO: render=true (resolve JS) + premium=true (IP de casa, impossível de bloquear)
-    url = f"http://api.scraperapi.com?api_key={SCRAPER_KEY}&url={url_alvo}&render=true&premium=true"
+    # O PULO DO GATO: Tiramos o 'render=true' para não bugar o JSON, mas mantemos o 'premium=true' que venceu o Cloudflare!
+    url = f"http://api.scraperapi.com?api_key={SCRAPER_KEY}&url={url_alvo}&premium=true"
     
     try:
-        print("Buscando dados via ScraperAPI (Modo Premium Residencial)...")
-        # IPs residenciais demoram um pouco mais para conectar, tempo aumentado para 120s
-        response = requests.get(url, timeout=120)
+        print("Buscando dados via ScraperAPI (Modo Premium Residencial Direto)...")
+        response = requests.get(url, timeout=90)
         
         try:
             data = response.json()
         except json.JSONDecodeError:
-            # Se bloquear de novo, agora ele pega até 200 letras do erro e o código do status
-            texto_erro = response.text[:200].replace('\n', ' ')
+            # Se der erro, mostramos o que o site devolveu
+            texto_erro = response.text[:150].replace('\n', ' ')
             raise ValueError(f"Status {response.status_code} - Texto: {texto_erro}")
         
         items = data.get('items', [])
         
         if not items:
-            raise ValueError("A lista de holders veio vazia. API original não tem dados.")
+            raise ValueError("A lista de holders veio vazia.")
 
         holders_list = []
         for i, item in enumerate(items[:50], 1):
@@ -53,7 +53,7 @@ def get_holders():
 
     except Exception as e:
         print(f"Erro na execução: {e}")
-        error_data = [{"rank": "!", "address": f"Erro Scraper Premium: {str(e)[:70]}", "quantity": "0", "percentage": "0"}]
+        error_data = [{"rank": "!", "address": f"Erro: {str(e)[:70]}", "quantity": "0", "percentage": "0"}]
         with open('holders.json', 'w') as f:
             json.dump(error_data, f)
         sys.exit(0)
