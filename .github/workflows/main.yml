@@ -20,7 +20,8 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: pip install requests
+        # ADICIONAMOS O CLOUDSCRAPER AQUI:
+        run: pip install requests cloudscraper
 
       - name: Run collector
         run: python update_holders.py
