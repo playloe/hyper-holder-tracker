@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Força a permissão de escrita diretamente no nível do Job
     permissions:
       contents: write
     
@@ -16,7 +15,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Garante que ele pegue todo o histórico para poder fazer o push
+          persist-credentials: false # Vamos usar o token manualmente para evitar o erro 128
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -29,10 +28,12 @@ jobs:
       - name: Run collector
         run: python update_holders.py
 
-      - name: Commit and push if changed
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add holders.json
-          git commit -m "Update holders data" || echo "Sem mudanças para salvar"
-          git push origin main
+          # Só faz o commit se houver mudanças reais
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update holders data" && git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main)
