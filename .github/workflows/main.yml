@@ -10,12 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,12 +31,5 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          
-          # Verifica se o arquivo existe antes de tentar adicionar
-          if [ -f holders.json ]; then
-            git add holders.json
-            git diff --quiet && git diff --staged --quiet || (git commit -m "Update holders data" && git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git" HEAD:main)
-          else
-            echo "ERRO: holders.json nao foi gerado pelo script Python."
-            exit 1
-          fi
+          git add holders.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update holders data" && git push)
