@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HF Holder Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0B0E14] text-gray-100 min-h-screen font-sans">
+    <nav class="border-b border-gray-800 bg-[#111622] px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-2">
+            <div class="bg-blue-600 p-2 rounded-lg text-white font-bold">HF</div>
+            <span class="text-xl font-bold">Hyper<span class="text-blue-500">Tracker</span></span>
+        </div>
+        <div id="status" class="text-xs text-gray-400 bg-[#1A2132] px-3 py-1 rounded-full border border-gray-800 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            Dados Atualizados
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-8">
+        <div class="bg-[#111622] rounded-xl border border-gray-800 overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-gray-800 bg-[#141B2B]">
+                <h2 class="text-lg font-semibold text-white">Ranking de Holders - Token HF</h2>
+                <p class="text-xs text-gray-400 mt-1">Monitoramento automático via HyperScan API</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-[#171E30] text-gray-400 text-xs font-semibold uppercase tracking-wider border-b border-gray-800">
+                            <th class="py-4 px-6 text-center">Rank</th>
+                            <th class="py-4 px-6">Carteira</th>
+                            <th class="py-4 px-6 text-right">Quantidade</th>
+                            <th class="py-4 px-6 text-right">Percentual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabela-corpo" class="divide-y divide-gray-800/50">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        fetch('holders.json')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('tabela-corpo');
+                data.forEach(h => {
+                    const row = `
+                        <tr class="hover:bg-[#161D2F] transition-colors">
+                            <td class="py-4 px-6 text-center font-bold text-blue-400">${h.rank}</td>
+                            <td class="py-4 px-6 font-mono text-xs text-gray-300">${h.address}</td>
+                            <td class="py-4 px-6 text-right font-medium text-white">${parseFloat(h.quantity).toLocaleString('en-US', {maximumFractionDigits: 2})}</td>
+                            <td class="py-4 px-6 text-right text-blue-400 font-semibold">${h.percentage}%</td>
+                        </tr>`;
+                    tbody.innerHTML += row;
+                });
+            })
+            .catch(err => {
+                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="4" class="p-10 text-center text-red-400">Aguardando primeira atualização do robô...</td></tr>`;
+            });
+    </script>
+</body>
+</html>
