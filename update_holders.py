@@ -6,24 +6,40 @@ def get_holders():
     SCRAPER_KEY = "49b6f019e504a5ec3271bd87b55da0bd"
     url_alvo = "https://hyperevmscan.io/api/v2/tokens/0x9df5c1ad28fb08b47c07bd8e48f37b33fdebcd05/holders"
     
-    # O COMBO MÁXIMO: antibot=true (resolve o desafio do Cloudflare) + premium=true (IP Residencial)
+    # Mantemos o combo que furou o bloqueio (Antibot + Premium)
     url = f"http://api.scraperapi.com?api_key={SCRAPER_KEY}&url={url_alvo}&antibot=true&premium=true"
     
     try:
-        print("Buscando dados via ScraperAPI (Combo: Premium + AntiBot)...")
-        # O desafio do Cloudflare pode levar uns 10 a 15 segundos para ser resolvido pelo ScraperAPI
+        print("Buscando dados via ScraperAPI...")
         response = requests.get(url, timeout=120)
+        texto_resposta = response.text
         
+        data = None
+        
+        # Tenta ler o JSON normalmente
         try:
-            data = response.json()
+            data = json.loads(texto_resposta)
         except json.JSONDecodeError:
-            texto_erro = response.text[:100].replace('\n', ' ')
-            raise ValueError(f"Site bloqueou com HTML: {texto_erro}")
-        
+            print("O ScraperAPI embrulhou os dados em HTML. Extraindo o recheio (JSON)...")
+            # Se falhar, procura exatamente onde começam e terminam os dados (os símbolos { e })
+            inicio = texto_resposta.find('{')
+            fim = texto_resposta.rfind('}') + 1
+            
+            if inicio != -1 and fim != 0:
+                json_puro = texto_resposta[inicio:fim]
+                try:
+                    data = json.loads(json_puro)
+                except Exception as e:
+                    raise ValueError(f"Falha ao limpar o HTML: {e}")
+            else:
+                # Se realmente não tiver dados, mostramos os primeiros caracteres da página para investigar
+                raise ValueError(f"Página bloqueada: {texto_resposta[:60]}")
+
+        # Daqui pra baixo é o código normal, pois já extraímos os dados limpos!
         items = data.get('items', [])
         
         if not items:
-            raise ValueError("A lista de holders veio vazia. API original não tem dados.")
+            raise ValueError("A API não retornou as carteiras (lista vazia).")
 
         holders_list = []
         for i, item in enumerate(items[:50], 1):
@@ -48,11 +64,11 @@ def get_holders():
         
         with open('holders.json', 'w') as f:
             json.dump(holders_list, f, indent=4)
-        print(f"Sucesso! {len(holders_list)} holders salvos furando o Cloudflare.")
+        print(f"Sucesso Absoluto! {len(holders_list)} holders salvos e limpos.")
 
     except Exception as e:
         print(f"Erro na execução: {e}")
-        error_data = [{"rank": "!", "address": f"Erro Final: {str(e)[:70]}", "quantity": "0", "percentage": "0"}]
+        error_data = [{"rank": "!", "address": f"Erro de Extração: {str(e)[:60]}", "quantity": "0", "percentage": "0"}]
         with open('holders.json', 'w') as f:
             json.dump(error_data, f)
         sys.exit(0)
